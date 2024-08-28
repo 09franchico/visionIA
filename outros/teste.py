@@ -2,22 +2,35 @@ import dearpygui.dearpygui as dpg
 
 dpg.create_context()
 
-def print_val(sender):
+def print_value(sender):
     print(dpg.get_value(sender))
 
-with dpg.window(label="Tutorial", width=400, height=400):
-    with dpg.plot(label="Drag Lines/Points", height=-1, width=-1):
-        dpg.add_plot_legend()
-        dpg.add_plot_axis(dpg.mvXAxis, label="x")
-        dpg.set_axis_limits(dpg.last_item(), -5, 5)
-        dpg.add_plot_axis(dpg.mvYAxis, label="y")
-        dpg.set_axis_limits(dpg.last_item(), -5, 5)
+with dpg.window(width=300):
+    input_txt1 = dpg.add_input_text()
+    # The value for input_text2 will have a starting value
+    # of "This is a default value!"
+    input_txt2 = dpg.add_input_text(
+        label="InputTxt2",
+        default_value="This is a default value!",
+        callback=print_value
+    )
 
-        # drag lines/points belong to the plot NOT axis
-        dpg.add_drag_line(label="dline1", color=[255, 0, 0, 255], default_value=2.0, callback=print_val)
-        dpg.add_drag_line(label="dline2", color=[255, 255, 0, 255], vertical=False, default_value=-2, callback=print_val)
-        dpg.add_drag_point(label="dpoint1", color=[255, 0, 255, 255], default_value=(1.0, 1.0), callback=print_val)
-        dpg.add_drag_point(label="dpoint2", color=[255, 0, 255, 255], default_value=(-1.0, 1.0), callback=print_val)
+    slider_float1 = dpg.add_slider_float()
+    # The slider for slider_float2 will have a starting value
+    # of 50.0.
+    slider_float2 = dpg.add_slider_float(
+        label="SliderFloat2",
+        default_value=50.0,
+        callback=print_value
+    )
+
+    dpg.set_item_callback(input_txt1, print_value)
+    dpg.set_item_callback(slider_float1, print_value)
+
+    print(dpg.get_value(input_txt1))
+    print(dpg.get_value(input_txt2))
+    print(dpg.get_value(slider_float1))
+    print(dpg.get_value(slider_float2))
 
 dpg.create_viewport(title='Custom Title', width=800, height=600)
 dpg.setup_dearpygui()

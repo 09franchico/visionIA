@@ -70,7 +70,7 @@ class ExampleApp:
                                     dpg.add_spacer(width=10)
                                     dpg.add_button(label="ANEXA IMAGEM",width=150,height=30,callback=lambda: dpg.show_item("file_dialog_id"))
                                     dpg.add_spacer(width=20)
-                                    dpg.add_button(label="START",width=150,height=30)
+                                    dpg.add_button(label="START",width=150,height=30,callback=self.on_save)
                                     dpg.add_spacer(width=20)
                                     dpg.add_button(label="DELETE",width=150,height=30,callback=self.delete_item_circle)
                                     dpg.add_button(label="MUDAR COR",width=150,height=30,callback=self.set_cor)
@@ -95,22 +95,32 @@ class ExampleApp:
         with dpg.item_handler_registry() as registry:
              dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,callback=self.plot_mouse_click)
         dpg.bind_item_handler_registry(plot,registry)
+        
+        
+
             
         
             
 
     def on_save(self, sender, app_data):
-        print("Save button clicked")
+        teste1 = dpg.get_item_configuration("plot_imagem")
+        teste2 = dpg.get_item_info("plot_imagem")
+        teste3 = dpg.get_item_state("plot_imagem")
+        print(teste1)
+        print(teste2)
+        print(teste3)
+        # dpg.show_item_registry()
         
         
     def set_image_plot(self,path):
         try:  
-            if dpg.does_item_exist("imagem_id"):
+            if dpg.does_item_exist(""):
                 dpg.delete_item("imagem_id")   
             if dpg.does_item_exist("y_axis_image_id"):
                return
             else:
                 width, height, channels, data = dpg.load_image(path)
+                
                 with dpg.texture_registry():
                     dpg.add_static_texture(width, height, data, tag="imagem_id")
                 dpg.add_image_series("imagem_id", [0, 0], [width, height], parent="y_axis", tag="y_axis_image_id")
