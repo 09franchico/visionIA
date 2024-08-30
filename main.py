@@ -1,6 +1,9 @@
 import dearpygui.dearpygui as dpg
 from theme_settings.theme_registry import *
-# from theme_settings.font_registry import *
+import json
+import os
+import cv2 as cv2
+import numpy as np
 
 
 
@@ -8,6 +11,7 @@ class ExampleApp:
     
     def __init__(self):
         self.circle_data = []
+        self.image_path = None
         self.setup()
         
     
@@ -99,20 +103,64 @@ class ExampleApp:
         
 
             
-        
-            
-
     def on_save(self, sender, app_data):
-        teste1 = dpg.get_item_configuration("plot_imagem")
-        teste2 = dpg.get_item_info("plot_imagem")
-        teste3 = dpg.get_item_state("plot_imagem")
-        print(teste1)
-        print(teste2)
-        print(teste3)
-        # dpg.show_item_registry()
+        # Salva os dados dos círculos
+        file_path = os.path.join(os.getcwd(), 'circle_data.json')
+        with open(file_path, 'w') as file:
+            json.dump(self.circle_data, file, indent=4)
+        
+        # Carregar a imagem original
+        img = cv2.imread(self.image_path)
+        img_height, img_width, _ = img.shape
+        
+        # Obtenha o tamanho da imagem no plot
+        plot_config = dpg.get_item_configuration("imagem_id")
+        plot_width = plot_config['width']
+        plot_height = plot_config['height']
+        
+        print(f"Imagem original - Largura: {img_width}, Altura: {img_height}")
+        print(f"Imagem no plot - Largura: {plot_width}, Altura: {plot_height}")
+        
+        for i, data in enumerate(self.circle_data):
+         
+            x, y = data['center']
+            radius = data['radius']
+            
+            x, y, radius = int(x), int(y), int(radius)
+            
+            top_left_x = x - radius
+            top_left_y = y - radius
+            bottom_right_x = x + radius
+            bottom_right_y = y + radius
+            
+            print("Left",top_left_x)
+            print("Left",top_left_y)
+            print("botton",bottom_right_x)
+            print("botton",bottom_right_y)
+
+            cropped_img = img[top_left_y:bottom_right_y, top_left_x:bottom_right_x]
+            
+            
+            # Salvar a imagem recortada
+            save_path = os.path.join(os.getcwd(), f'circle_{i}.png')
+            cv2.imwrite(save_path, cropped_img)
+            
+            # Para depuração: desenhar o círculo na imagem original e salvar
+            img_with_circle = img.copy()
+            cv2.circle(img_with_circle, (x, y), radius, (0, 255, 0), 2)
+            
+            debug_path = os.path.join(os.getcwd(), f'debug_circle_{i}.png')
+            cv2.imwrite(debug_path, img_with_circle)
+            
+            print(f"Círculo salvo em: {save_path}")
+            print(f"Imagem com círculo para depuração: {debug_path}")
+            
+        
+
         
         
     def set_image_plot(self,path):
+        self.image_path = path
         try:  
             if dpg.does_item_exist(""):
                 dpg.delete_item("imagem_id")   
@@ -122,8 +170,11 @@ class ExampleApp:
                 width, height, channels, data = dpg.load_image(path)
                 
                 with dpg.texture_registry():
-                    dpg.add_static_texture(width, height, data, tag="imagem_id")
+                    dpg.add_dynamic_texture(width, height, data, tag="imagem_id")
+                
                 dpg.add_image_series("imagem_id", [0, 0], [width, height], parent="y_axis", tag="y_axis_image_id")
+                
+                
         except Exception as e:
              print(f"Erro set_image: {e}")  
         
@@ -138,7 +189,7 @@ class ExampleApp:
         x, y = dpg.get_plot_mouse_pos()
         
         tag = f"circle_{len(self.circle_data)}" 
-        radius = 4500 * 0.01
+        radius = 4608 * 0.01
         dpg.draw_circle(center=[x, y], radius=radius, color=(219, 73, 255), parent="draw_node",thickness=2,tag=tag)
         self.circle_data.append({"tag": tag, "center": (x, y), "radius": radius})
         
@@ -156,7 +207,22 @@ class ExampleApp:
         
 
         
+
+    # def on_save(self, sender, app_data):
+     
+    #     file_path = os.path.join(os.getcwd(), 'circle_data.json')
         
+    #     with open(file_path, 'w') as file:
+    #         json.dump(self.circle_data, file, indent=4)
+        
+    #     for data in self.circle_data:
+    #         print(f"Tag: {data['tag']}, Coordenadas: {data['center']}, Raio: {data['radius']}")
+            
+    #     teste1 = dpg.get_item_configuration("imagem_id")
+    #     print(teste1)
+        # teste2 = dpg.get_item_info("plot_imagem")
+        # teste3 = dpg.get_item_state("plot_imagem")
+        # teste4 = dpg.get_item_height("plot_imagem")
 
 
 if __name__ == "__main__":
