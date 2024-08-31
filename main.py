@@ -78,6 +78,7 @@ class ExampleApp:
                                     dpg.add_spacer(width=20)
                                     dpg.add_button(label="DELETE",width=150,height=30,callback=self.delete_item_circle)
                                     dpg.add_button(label="MUDAR COR",width=150,height=30,callback=self.set_cor)
+                                    dpg.add_button(label="ANEXAR JSON",width=150,height=30,callback=lambda: dpg.show_item("file_json_id"))
                                     
                             with dpg.child_window(height=265) as aprov:
                                 dpg.add_spacer(height=110)
@@ -95,10 +96,36 @@ class ExampleApp:
             dpg.add_file_extension(".h", color=(255, 0, 255, 255), custom_text="[header]")
             dpg.add_file_extension(".py", color=(0, 255, 0, 255), custom_text="[Python]")
             
+        #MODAL JSON                       
+        with dpg.file_dialog(directory_selector=False, show=False, callback=self.set_json_image, id="file_json_id", width=700 ,height=400):
+            dpg.add_file_extension(".json")
+        
+            
         
         with dpg.item_handler_registry() as registry:
              dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,callback=self.plot_mouse_click)
         dpg.bind_item_handler_registry(plot,registry)
+        
+        
+        
+    def set_json_image(self,sender, app_data, user_data):
+        
+        try:
+            file_path = app_data["file_path_name"]
+        
+            if not file_path:
+                print("Nenhum arquivo JSON selecionado")
+                return
+            with open(file_path, 'r') as file:
+                data = json.load(file)
+            dpg.delete_item("draw_node", children_only=True)
+            for item in data:
+                if 'circle' in item.get('tag', ''):
+                    x, y = item['center']
+                    radius = item['radius']
+                    dpg.draw_circle(center=[x, y], radius=radius, color=(255, 255, 0), parent="draw_node", thickness=2, tag=item['tag'])
+        except Exception as e:
+            print("Erro em set_json_imagem: ",e)
         
         
 
@@ -109,51 +136,51 @@ class ExampleApp:
         with open(file_path, 'w') as file:
             json.dump(self.circle_data, file, indent=4)
         
-        # Carregar a imagem original
-        img = cv2.imread(self.image_path)
-        img_height, img_width, _ = img.shape
+        # # Carregar a imagem original
+        # img = cv2.imread(self.image_path)
+        # img_height, img_width, _ = img.shape
         
-        # Obtenha o tamanho da imagem no plot
-        plot_config = dpg.get_item_configuration("imagem_id")
-        plot_width = plot_config['width']
-        plot_height = plot_config['height']
+        # # Obtenha o tamanho da imagem no plot
+        # plot_config = dpg.get_item_configuration("imagem_id")
+        # plot_width = plot_config['width']
+        # plot_height = plot_config['height']
         
-        print(f"Imagem original - Largura: {img_width}, Altura: {img_height}")
-        print(f"Imagem no plot - Largura: {plot_width}, Altura: {plot_height}")
+        # print(f"Imagem original - Largura: {img_width}, Altura: {img_height}")
+        # print(f"Imagem no plot - Largura: {plot_width}, Altura: {plot_height}")
         
-        for i, data in enumerate(self.circle_data):
+        # for i, data in enumerate(self.circle_data):
          
-            x, y = data['center']
-            radius = data['radius']
+        #     x, y = data['center']
+        #     radius = data['radius']
             
-            x, y, radius = int(x), int(y), int(radius)
+        #     x, y, radius = int(x), int(y), int(radius)
             
-            top_left_x = x - radius
-            top_left_y = y - radius
-            bottom_right_x = x + radius
-            bottom_right_y = y + radius
+        #     top_left_x = x - radius
+        #     top_left_y = y - radius
+        #     bottom_right_x = x + radius
+        #     bottom_right_y = y + radius
             
-            print("Left",top_left_x)
-            print("Left",top_left_y)
-            print("botton",bottom_right_x)
-            print("botton",bottom_right_y)
+        #     print("Left",top_left_x)
+        #     print("Left",top_left_y)
+        #     print("botton",bottom_right_x)
+        #     print("botton",bottom_right_y)
 
-            cropped_img = img[top_left_y:bottom_right_y, top_left_x:bottom_right_x]
+        #     cropped_img = img[top_left_y:bottom_right_y, top_left_x:bottom_right_x]
             
             
-            # Salvar a imagem recortada
-            save_path = os.path.join(os.getcwd(), f'circle_{i}.png')
-            cv2.imwrite(save_path, cropped_img)
+        #     # Salvar a imagem recortada
+        #     save_path = os.path.join(os.getcwd(), f'circle_{i}.png')
+        #     cv2.imwrite(save_path, cropped_img)
             
-            # Para depuração: desenhar o círculo na imagem original e salvar
-            img_with_circle = img.copy()
-            cv2.circle(img_with_circle, (x, y), radius, (0, 255, 0), 2)
+        #     # Para depuração: desenhar o círculo na imagem original e salvar
+        #     img_with_circle = img.copy()
+        #     cv2.circle(img_with_circle, (x, y), radius, (0, 255, 0), 2)
             
-            debug_path = os.path.join(os.getcwd(), f'debug_circle_{i}.png')
-            cv2.imwrite(debug_path, img_with_circle)
+        #     debug_path = os.path.join(os.getcwd(), f'debug_circle_{i}.png')
+        #     cv2.imwrite(debug_path, img_with_circle)
             
-            print(f"Círculo salvo em: {save_path}")
-            print(f"Imagem com círculo para depuração: {debug_path}")
+        #     print(f"Círculo salvo em: {save_path}")
+        #     print(f"Imagem com círculo para depuração: {debug_path}")
             
         
 
@@ -168,13 +195,9 @@ class ExampleApp:
                return
             else:
                 width, height, channels, data = dpg.load_image(path)
-                
                 with dpg.texture_registry():
                     dpg.add_dynamic_texture(width, height, data, tag="imagem_id")
-                
-                dpg.add_image_series("imagem_id", [0, 0], [width, height], parent="y_axis", tag="y_axis_image_id")
-                
-                
+                dpg.add_image_series("imagem_id", [0, 0], [width, height], parent="y_axis", tag="y_axis_image_id")  
         except Exception as e:
              print(f"Erro set_image: {e}")  
         
@@ -185,19 +208,17 @@ class ExampleApp:
     
         
     def plot_mouse_click(self,sender, app_data, user_data):
-        
         x, y = dpg.get_plot_mouse_pos()
-        
         tag = f"circle_{len(self.circle_data)}" 
         radius = 4608 * 0.01
         dpg.draw_circle(center=[x, y], radius=radius, color=(219, 73, 255), parent="draw_node",thickness=2,tag=tag)
         self.circle_data.append({"tag": tag, "center": (x, y), "radius": radius})
         
         
-        
     def delete_item_circle(self):
         self.circle_data.clear()
         dpg.delete_item("draw_node",children_only=True)
+    
     
     def set_cor(self):
         for data in self.circle_data:
