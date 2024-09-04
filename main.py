@@ -4,7 +4,7 @@ import json
 import os
 import cv2 as cv2
 import numpy as np
-
+import dearpygui_grid as dpg_grid
 
 
 class ExampleApp:
@@ -22,7 +22,7 @@ class ExampleApp:
         self.theme_manager = ThemeManager()
         self.theme_manager.font()
         
-        dpg.create_viewport(title='Custom Title', width=1200, height=800)
+        dpg.create_viewport(title='VISONIA', width=1200, height=800)
         dpg.set_viewport_max_height(800)
         dpg.set_viewport_max_width(1200)
         dpg.bind_theme(self.theme_manager.global_theme)
@@ -62,12 +62,24 @@ class ExampleApp:
                                         dpg.add_draw_node(parent=plot,tag="draw_node")
                                         
                             with dpg.tab(label="Desenhar imagem",tag="tab2_plot_image"):
-                                with dpg.drawlist(width=1200, height=600,tag="draw_image"):
-                                    pass
-                                        
+                                 with dpg.node_editor(callback=self.link_callback, delink_callback=self.delink_callback,tag="node_id"):
+                                     
+                                    with dpg.node(label="Francisco"):
+                                        with dpg.node_attribute(label="Node A1"):
+                                            dpg.add_input_float(label="F1", width=150)
+
+                                        with dpg.node_attribute(label="Node A2", attribute_type=dpg.mvNode_Attr_Output):
+                                            dpg.add_input_float(label="F2", width=150)
+
+                                    with dpg.node(label="Santos"):
+                                        with dpg.node_attribute(label="Node A3"):
+                                            dpg.add_input_float(label="F3", width=200)
+
+                                        with dpg.node_attribute(label="Node A4", attribute_type=dpg.mvNode_Attr_Output):
+                                            dpg.add_input_float(label="F4", width=200)
+                                            
                     
                     with dpg.child_window(autosize_x=True, autosize_y=True):
-
                         with dpg.group():
                             with dpg.child_window(height=380,border=False):
                                 with dpg.group():
@@ -79,6 +91,7 @@ class ExampleApp:
                                     dpg.add_button(label="DELETE",width=150,height=30,callback=self.delete_item_circle)
                                     dpg.add_button(label="MUDAR COR",width=150,height=30,callback=self.set_cor)
                                     dpg.add_button(label="ANEXAR JSON",width=150,height=30,callback=lambda: dpg.show_item("file_json_id"))
+                                    dpg.add_button(label="NODE",width=150,height=30,callback=self.mostrar_node)
                                     
                             with dpg.child_window(height=265) as aprov:
                                 dpg.add_spacer(height=110)
@@ -107,7 +120,18 @@ class ExampleApp:
         dpg.bind_item_handler_registry(plot,registry)
         
         
+    def mostrar_node(self):
+        teste = dpg.get_item_configuration("node_id")
+        print(teste)
         
+    def link_callback(self,sender, app_data):
+        dpg.add_node_link(app_data[0], app_data[1], parent=sender)
+      
+    def delink_callback(self,sender, app_data):
+        dpg.delete_item(app_data)
+            
+
+
     def set_json_image(self,sender, app_data, user_data):
         
         try:
@@ -119,6 +143,8 @@ class ExampleApp:
             with open(file_path, 'r') as file:
                 data = json.load(file)
             dpg.delete_item("draw_node", children_only=True)
+            
+            self.circle_data = data
             for item in data:
                 if 'circle' in item.get('tag', ''):
                     x, y = item['center']
@@ -136,22 +162,26 @@ class ExampleApp:
         with open(file_path, 'w') as file:
             json.dump(self.circle_data, file, indent=4)
         
-        # # Carregar a imagem original
-        # img = cv2.imread(self.image_path)
-        # img_height, img_width, _ = img.shape
+        img = cv2.imread(self.image_path)
+        img_height, img_width, _ = img.shape
         
         # # Obtenha o tamanho da imagem no plot
-        # plot_config = dpg.get_item_configuration("imagem_id")
-        # plot_width = plot_config['width']
-        # plot_height = plot_config['height']
+        plot_config = dpg.get_item_configuration("imagem_id")
+        plot_width = plot_config['width']
+        plot_height = plot_config['height']
         
-        # print(f"Imagem original - Largura: {img_width}, Altura: {img_height}")
-        # print(f"Imagem no plot - Largura: {plot_width}, Altura: {plot_height}")
+        print(f"Imagem original - Largura: {img_width}, Altura: {img_height}")
+        print(f"Imagem no plot - Largura: {plot_width}, Altura: {plot_height}")
         
-        # for i, data in enumerate(self.circle_data):
+        for i, data in enumerate(self.circle_data):
          
-        #     x, y = data['center']
-        #     radius = data['radius']
+            x, y = data['center']
+            radius = data['radius']
+            
+            print("Posicao x:",x)
+            print("Posicao y:",y)
+            print("RADIUS - x", radius)
+            
             
         #     x, y, radius = int(x), int(y), int(radius)
             
@@ -225,25 +255,6 @@ class ExampleApp:
             dpg.configure_item(data["tag"], color=(255,0,0))
         
 
-        
-
-        
-
-    # def on_save(self, sender, app_data):
-     
-    #     file_path = os.path.join(os.getcwd(), 'circle_data.json')
-        
-    #     with open(file_path, 'w') as file:
-    #         json.dump(self.circle_data, file, indent=4)
-        
-    #     for data in self.circle_data:
-    #         print(f"Tag: {data['tag']}, Coordenadas: {data['center']}, Raio: {data['radius']}")
-            
-    #     teste1 = dpg.get_item_configuration("imagem_id")
-    #     print(teste1)
-        # teste2 = dpg.get_item_info("plot_imagem")
-        # teste3 = dpg.get_item_state("plot_imagem")
-        # teste4 = dpg.get_item_height("plot_imagem")
 
 
 if __name__ == "__main__":
