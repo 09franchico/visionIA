@@ -15,7 +15,6 @@ class ExampleApp:
         self.setup()
         
     
-
     def setup(self):
         
         dpg.create_context()
@@ -55,7 +54,7 @@ class ExampleApp:
                         with dpg.tab_bar():
                             
                             with dpg.tab(label="Plotar imagem",tag="tab1_plot_image"):
-                                with dpg.plot(query=True,width=800,height=620,crosshairs=True,tag="plot_imagem",no_box_select=True,no_menus=True) as plot:
+                                with dpg.plot(query=True,width=-1,height=-1,crosshairs=True,tag="plot_imagem",no_box_select=True,no_menus=True) as plot:
                                         dpg.add_plot_legend()
                                         dpg.add_plot_axis(dpg.mvXAxis, label="",tag="x_axis")
                                         dpg.add_plot_axis(dpg.mvYAxis, label="", tag="y_axis")
@@ -165,52 +164,33 @@ class ExampleApp:
         img = cv2.imread(self.image_path)
         img_height, img_width, _ = img.shape
         
-        # # Obtenha o tamanho da imagem no plot
-        plot_config = dpg.get_item_configuration("imagem_id")
-        plot_width = plot_config['width']
-        plot_height = plot_config['height']
         
         print(f"Imagem original - Largura: {img_width}, Altura: {img_height}")
-        print(f"Imagem no plot - Largura: {plot_width}, Altura: {plot_height}")
         
         for i, data in enumerate(self.circle_data):
-         
-            x, y = data['center']
-            radius = data['radius']
+            x = int(data['center'][0])
+            y = int(data['center'][1])
+            radius = int(data['radius'])
             
-            print("Posicao x:",x)
-            print("Posicao y:",y)
-            print("RADIUS - x", radius)
+                
+            print(f"Posicao x: {x}")
+            print(f"Posicao y: {y}")
+            print(f"Raio: {radius}")
             
+            # Definir os limites do recorte
+            x_start = max(0, x - radius)
+            x_end = min(img_width, x + radius)
+            y_start = max(0, y - radius)
+            y_end = min(img_height, y + radius)
             
-        #     x, y, radius = int(x), int(y), int(radius)
+            # Recortar a imagem na região especificada
+            cropped_img = img[y_start:y_end, x_start:x_end]
             
-        #     top_left_x = x - radius
-        #     top_left_y = y - radius
-        #     bottom_right_x = x + radius
-        #     bottom_right_y = y + radius
+            # Salvar a imagem recortada
+            cropped_image_path = os.path.join(os.getcwd(), f'cropped_circle_{i}.png')
+            cv2.imwrite(cropped_image_path, cropped_img)
             
-        #     print("Left",top_left_x)
-        #     print("Left",top_left_y)
-        #     print("botton",bottom_right_x)
-        #     print("botton",bottom_right_y)
-
-        #     cropped_img = img[top_left_y:bottom_right_y, top_left_x:bottom_right_x]
-            
-            
-        #     # Salvar a imagem recortada
-        #     save_path = os.path.join(os.getcwd(), f'circle_{i}.png')
-        #     cv2.imwrite(save_path, cropped_img)
-            
-        #     # Para depuração: desenhar o círculo na imagem original e salvar
-        #     img_with_circle = img.copy()
-        #     cv2.circle(img_with_circle, (x, y), radius, (0, 255, 0), 2)
-            
-        #     debug_path = os.path.join(os.getcwd(), f'debug_circle_{i}.png')
-        #     cv2.imwrite(debug_path, img_with_circle)
-            
-        #     print(f"Círculo salvo em: {save_path}")
-        #     print(f"Imagem com círculo para depuração: {debug_path}")
+            print(f"Imagem recortada salva em: {cropped_image_path}")
             
         
 
