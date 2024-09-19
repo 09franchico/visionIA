@@ -4,7 +4,6 @@ import json
 import os
 import cv2 as cv2
 import numpy as np
-import dearpygui_grid as dpg_grid
 
 
 class ExampleApp:
